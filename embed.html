@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>3D Gold Text API</title>
+    <style>
+        body {
+            background-color: #121212; /* Clean matte black canvas */
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            box-sizing: border-box;
+        }
+
+        .canvas-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .html-wrapper {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            word-wrap: break-word;
+            overflow: visible;
+        }
+
+        .gold-balloon-text {
+            /* Using a heavy local system font so it safely renders everywhere, even inside an <img> container */
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-size: clamp(40px, 12vw, 120px); /* Smart scaling based on text length */
+            font-weight: 900;
+            line-height: 1.1;
+            letter-spacing: 4px;
+            margin: 0;
+            padding: 20px;
+            color: #f1b51c;
+            
+            /* Core 3D Filter effects */
+            filter: url(#puffy-3d-gold);
+            -webkit-filter: url(#puffy-3d-gold) drop-shadow(0px 25px 15px rgba(0, 0, 0, 0.8));
+        }
+    </style>
+</head>
+<body>
+
+    <div class="canvas-container">
+        <svg viewBox="0 0 1000 600" width="100%" height="100%">
+            <defs>
+                <filter id="puffy-3d-gold" x="-30%" y="-30%" width="160%" height="160%">
+                    <feGaussianBlur in="SourceAlpha" stdDeviation="6" result="blur" />
+                    
+                    <feDiffuseLighting in="blur" surfaceScale="9" diffuseConstant="1.0" lighting-color="#ffeaa7" result="diffuse">
+                        <feDistantLight azimuth="225" elevation="45" />
+                    </feDiffuseLighting>
+                    <feComposite in="diffuse" in2="SourceAlpha" operator="in" result="diffuse-clipped" />
+                    
+                    <feFlood flood-color="#f1b51c" result="base-gold" />
+                    <feBlend mode="multiply" in="base-gold" in2="diffuse-clipped" result="shaded-body" />
+                    
+                    <feSpecularLighting in="blur" surfaceScale="9" specularConstant="2.0" specularExponent="35" lighting-color="#ffffff" result="specular">
+                        <feDistantLight azimuth="225" elevation="45" />
+                    </feSpecularLighting>
+                    <feComposite in="specular" in2="SourceAlpha" operator="in" result="specular-clipped" />
+                    
+                    <feComposite in="specular-clipped" in2="shaded-body" operator="arithmetic" k2="1" k3="1" result="lit-gold" />
+                    <feComposite in="lit-gold" in2="SourceAlpha" operator="in" />
+                </filter>
+            </defs>
+
+            <foreignObject x="0" y="0" width="1000" height="600">
+                <div class="html-wrapper" xmlns="http://www.w3.org/1999/xhtml">
+                    <h1 id="live-text" class="gold-balloon-text">AI</h1>
+                </div>
+            </foreignObject>
+        </svg>
+    </div>
+
+    <script>
+        // Reads URL parameter directly, handles line breaks, and hides the engine
+        (function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            let textParam = urlParams.get('text');
+            const display = document.getElementById('live-text');
+            
+            if (textParam) {
+                // Decode URI component and convert raw newlines (\n) or text markers into structural breaks
+                textParam = decodeURIComponent(textParam);
+                display.innerHTML = textParam.toUpperCase().replace(/\n/g, "<br/>");
+            } else {
+                display.innerHTML = "AI";
+            }
+        })();
+    </script>
+
+</body>
+</html>
