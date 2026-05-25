@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive 3D Gold Multiline Text</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@700&display=swap');
+
+        body {
+            background-color: #121212; /* Pitch black canvas */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            font-family: sans-serif;
+            overflow-x: hidden;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .canvas-container {
+            width: 100%;
+            max-width: 900px; 
+            display: flex;
+            justify-content: center;
+        }
+
+        /* The container holding the text inside the SVG */
+        .html-wrapper {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            /* Crucial for multiline wrapping */
+            word-wrap: break-word;
+            overflow: visible;
+        }
+
+        .gold-balloon-text {
+            font-family: 'Fredoka', sans-serif;
+            font-size: 110px; /* Adjusted slightly so multiline text fits beautifully */
+            font-weight: 700;
+            line-height: 1.2;
+            letter-spacing: 6px;
+            margin: 0;
+            padding: 20px;
+            color: #f1b51c; /* Fallback */
+            
+            /* Apply our true 3D balloon filter */
+            filter: url(#puffy-3d-gold);
+            
+            /* Clean drop shadow underneath the 3D text layers */
+            -webkit-filter: url(#puffy-3d-gold) drop-shadow(0px 25px 15px rgba(0, 0, 0, 0.8));
+        }
+
+        /* Input Control Styling */
+        .input-container {
+            margin-top: 40px;
+            z-index: 10;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        textarea {
+            background: #222;
+            border: 2px solid #f1b51c;
+            border-radius: 8px;
+            color: #fff;
+            padding: 12px;
+            font-size: 16px;
+            outline: none;
+            text-align: center;
+            font-family: 'Fredoka', sans-serif;
+            letter-spacing: 1px;
+            width: 100%;
+            height: 60px;
+            resize: none;
+            box-sizing: border-box;
+            transition: all 0.3s ease;
+        }
+
+        textarea:focus {
+            box-shadow: 0 0 15px rgba(241, 181, 28, 0.4);
+            background: #2a2a2a;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="canvas-container">
+        <svg viewBox="0 0 900 500" width="100%" height="100%">
+            <defs>
+                <filter id="puffy-3d-gold" x="-20%" y="-20%" width="140%" height="140%">
+                    <feGaussianBlur in="SourceAlpha" stdDeviation="5" result="blur" />
+                    
+                    <feDiffuseLighting in="blur" surfaceScale="10" diffuseConstant="1.0" lighting-color="#ffeaa7" result="diffuse">
+                        <feDistantLight azimuth="225" elevation="50" />
+                    </feDiffuseLighting>
+                    
+                    <feComposite in="diffuse" in2="SourceAlpha" operator="in" result="diffuse-clipped" />
+                    
+                    <feFlood flood-color="#f1b51c" result="base-gold" />
+                    <feBlend mode="multiply" in="base-gold" in2="diffuse-clipped" result="shaded-body" />
+                    
+                    <feSpecularLighting in="blur" surfaceScale="10" specularConstant="1.9" specularExponent="40" lighting-color="#ffffff" result="specular">
+                        <feDistantLight azimuth="225" elevation="50" />
+                    </feSpecularLighting>
+                    
+                    <feComposite in="specular" in2="SourceAlpha" operator="in" result="specular-clipped" />
+                    
+                    <feComposite in="specular-clipped" in2="shaded-body" operator="arithmetic" k2="1" k3="1" result="lit-gold" />
+                    
+                    <feComposite in="lit-gold" in2="SourceAlpha" operator="in" />
+                </filter>
+            </defs>
+
+            <foreignObject x="0" y="0" width="900" height="500">
+                <div class="html-wrapper" xmlns="http://www.w3.org/1999/xhtml">
+                    <h1 id="live-text" class="gold-balloon-text">AI</h1>
+                </div>
+            </foreignObject>
+        </svg>
+    </div>
+
+    <div class="input-container">
+        <textarea id="text-input" placeholder="Type here... Use Enter for new lines."></textarea>
+    </div>
+
+    <script>
+        const textarea = document.getElementById('text-input');
+        const displayOutput = document.getElementById('live-text');
+
+        // 1. URL Parameter Reader Logic
+        function loadTextFromUrl() {
+            const urlParams = new URLSearchParams(window.location.search);
+            let textParam = urlParams.get('text');
+
+            if (textParam) {
+                // Decode spaces and line breaks if passed into URL
+                textParam = decodeURIComponent(textParam);
+                updateTextDisplay(textParam);
+                textarea.value = textParam;
+            } else {
+                // Default fallback if no URL parameter exists
+                updateTextDisplay("AI");
+                textarea.value = "AI";
+            }
+        }
+
+        // 2. Main Render Function (replaces standard string with HTML line breaks)
+        function updateTextDisplay(str) {
+            // Converts line-breaks from textarea/URL into HTML breaks (<br>) 
+            // and sanitizes text to look clean and capitalized
+            displayOutput.innerHTML = str.toUpperCase().replace(/\n/g, "<br/>");
+        }
+
+        // 3. Typings Event Listener
+        textarea.addEventListener('input', (e) => {
+            updateTextDisplay(e.target.value);
+        });
+
+        // Run URL scanner immediately on load
+        loadTextFromUrl();
+    </script>
+
+</body>
+</html>
